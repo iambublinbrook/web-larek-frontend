@@ -1,6 +1,6 @@
 import { Form } from '../Form';
 import { EventEmitter } from '../base/events';
-import { OrderPayment, OrderFormState } from '../../types';
+import { OrderPayment, OrderFormState, PaymentChangeEvent } from '../../types';
 
 
 // Класс выбора способа оплаты и адреса
@@ -9,6 +9,7 @@ export class OrderForm extends Form<OrderPayment> {
   protected _cardButton: HTMLButtonElement;
   protected _cashButton: HTMLButtonElement;
   protected _address: HTMLInputElement;
+  protected _nextButton: HTMLButtonElement;
 
   constructor(container: HTMLFormElement, protected events: EventEmitter) {
     super(container, events);
@@ -19,25 +20,26 @@ export class OrderForm extends Form<OrderPayment> {
     ) as HTMLButtonElement;
     this._cashButton = this.container.elements.namedItem('cash') as HTMLButtonElement;
     this._address = this.container.elements.namedItem('address') as HTMLInputElement;
+    this._nextButton = this.container.querySelector('.modal__actions .button') as HTMLButtonElement;
 
-    // Обработчики нажатий на кнопки способов оплаты
-    if (this._cardButton) {
-      this._cardButton.addEventListener('click', () => {
-        events.emit('payment:change', {
-          payment: this._cardButton.name,
-          button: this._cardButton,
-        });
-      });
-    }
+    // Обработчики
+    this._cardButton.addEventListener('click', () => {
+      events.emit('payment:change', {
+        payment: 'card',
+        button: this._cardButton
+      } as PaymentChangeEvent);
+    });
 
-    if (this._cashButton) {
-      this._cashButton.addEventListener('click', () => {
-        events.emit('payment:change', {
-          payment: this._cashButton.name,
-          button: this._cashButton,
-        });
-      });
-    }
+    this._cashButton.addEventListener('click', () => {
+      events.emit('payment:change', {
+        payment: 'cash',
+        button: this._cashButton
+      } as PaymentChangeEvent);
+    });
+  }
+
+  set valid(value: boolean) {
+    this._nextButton.disabled = !value;
   }
 
   // Устанавливаем значение адреса
@@ -47,8 +49,8 @@ export class OrderForm extends Form<OrderPayment> {
 
   // Переключаем активный стиль у кнопок способа оплаты
   togglePayment(value: HTMLElement) {
-    this.clearPayment(); // Сначала убираем активность со всех
-    this.toggleClass(value, 'button_alt-active', true); // Затем ставим на текущую
+    this.clearPayment();
+    this.toggleClass(value, 'button_alt-active', true);
   }
 
   // Сбрасываем выбор способа оплаты
@@ -58,9 +60,6 @@ export class OrderForm extends Form<OrderPayment> {
   }
 
   render(state: OrderFormState): HTMLFormElement {
-    if (state.address) {
-      this.address = state.address;
-    }
-    return this.container;
+    return super.render(state);
   }
 }

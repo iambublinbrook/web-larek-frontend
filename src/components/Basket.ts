@@ -19,19 +19,22 @@ export class Basket extends Component<HTMLElement> {
     });
   }
 
+  //список карточек в корзину
   set items(items: HTMLElement[]) {
     if (items.length > 0) {
-      this._list.replaceChildren(...items);
+      this._list.replaceChildren(...items);//заменяет содержимое, если товара есть
     } else {
       this._list.textContent = 'Корзина пуста';
     }
     this.setDisabled(this._button, items.length === 0);
   }
 
+  //итоговая стоимость
   set total(value: number) {
     this.setText(this._total, `${value} синапсов`);
   }
 
+  //блокирует кнопку(true/false)
   set block(value: boolean) {
     this.setDisabled(this._button, value);
   }

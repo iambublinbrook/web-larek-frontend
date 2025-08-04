@@ -26,6 +26,11 @@ export class OrderContacts extends Form<Contacts> {
     // Получаем ссылки на элементы формы
     this._email = container.elements.namedItem('email') as HTMLInputElement;
     this._phone = container.elements.namedItem('phone') as HTMLInputElement;
+
+    this.container.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.events.emit('contacts:submit');
+    });
   }
 
   /**
@@ -43,5 +48,9 @@ export class OrderContacts extends Form<Contacts> {
    */
   set phone(value: string) {
     this._phone.value = value;
+  }
+
+  set valid(value: boolean) {
+    this._submit.disabled = !value;
   }
 }

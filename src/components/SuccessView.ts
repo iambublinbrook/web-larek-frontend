@@ -15,7 +15,6 @@ export class SuccessView extends Component<ISuccess> {
   /**Кнопка для закрытия окна */
   protected _closeButton: HTMLButtonElement;
 
-  private _total: number = 0;
 
   /**Создаем экземляр успешного заказа 
    * @param container — котейнер для рендеринга компонента
@@ -39,13 +38,12 @@ export class SuccessView extends Component<ISuccess> {
     });
   }
 
-  get total(): number {
-    return this._total;
-  }
-
+  /**
+   * Устанавливает итоговую сумму заказа
+   * @param value — общая стоиомсть
+   */
   set total(value: number) {
-    this._total = value;
-    this.events.emit('success:total-changed', { total: value });
+    this.setText(this._description, `Списано ${value} синапсов`);
   }
 
 }

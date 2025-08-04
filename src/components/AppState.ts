@@ -1,8 +1,18 @@
-import { IAppModel, IOrder, IProductItem, ValidationErrors } from '../types';
+import { IAppModel, IOrder, IProductItem, ValidationErrors, Payment } from '../types';
 import { IEvents } from '../components/base/events';
+import { Model } from './base/base-model';
 
+export class Product extends Model<IProductItem> {
+  id: string;
+  image: string;
+  title: string;
+  description: string;
+  category: string;
+  price: number | null;
+  button: string;
+}
 
-export class AppState<T> implements IAppModel {
+export class AppState extends Model<IAppModel> {
   catalog: IProductItem[] = [];
   preview: string | null = null;
   basket: IProductItem[] = [];
@@ -15,19 +25,17 @@ export class AppState<T> implements IAppModel {
   }
   formErrors: ValidationErrors = {};
 
-  constructor(protected data: Partial<T>, protected events: IEvents) {
-    Object.assign(this, data);
-  }
-
   // методы дял каталога
   setCatalog(items: IProductItem[]): void {
     this.catalog = [...items];
-    this.events.emit('products:changed', { catalog: this.catalog });
+    this.emitChanges('products:changed', { catalog: this.catalog });
   }
 
   setPreview(item: IProductItem | null) {
     this.preview = item?.id || null;
-    if (item) this.events.emit('preview:changed', item);
+    if (item) {
+      this.emitChanges('preview:changed', item);
+    }
   }
 
   //получаем данные товара из каталога по id
@@ -36,14 +44,16 @@ export class AppState<T> implements IAppModel {
   }
 
   // методы для корзины
+  //добавляем товар в корзину
   addProductToBasket(item: IProductItem): void {
     this.basket.push(item);
-    this.events.emit('basket:changed');
+    this.emitChanges('basket:changed');
   }
 
+  //удаляем товар из корзины
   deleteProductFromBasket(item: IProductItem): void {
     this.basket = this.basket.filter((product) => product.id !== item.id);
-    this.events.emit('basket:changed');
+    this.emitChanges('basket:changed');
   }
 
   // переключаем наличие товара в корзине
@@ -57,17 +67,20 @@ export class AppState<T> implements IAppModel {
     return !itemInBasket;
   }
 
+  //считаем общую сумму товаров
   getBasketTotal(): number {
-    return this.basket.reduce((total, item) => total + item.price, 0);
+    return this.basket.reduce((sum, item) => sum + (item.price ?? 0), 0);
   }
 
+  //считаем количество товаров в корзине
   getBasketCount(): number {
     return this.basket.length;
   }
 
+  //очищаем корзину
   clearBasket(): void {
     this.basket = [];
-    this.events.emit('basket:changed');
+    this.emitChanges('basket:changed');
   }
 
   // возвращает индекс для нумерации списка в корзине
@@ -87,15 +100,20 @@ export class AppState<T> implements IAppModel {
     }
   }
 
-  // методы дял заказа
+  // методы для заказа
   setOrderField(field: keyof IOrder, value: string): void {
     this.order[field] = value;
-    this.validateOrder();
+    if (field === 'email' || field === 'phone') {
+      this.validateContacts();
+    } else {
+      this.validateOrder();
+    }
   }
 
-  //назанчаем способ оплаты товара
-  setOrderPayment(value: string): void {
+  //назанчаем способ оплаты товара и запускаем валидацию товара
+  setOrderPayment(value: Payment): void {
     this.order.payment = value;
+    this.validateOrder();
   }
 
   validateOrder(): boolean {
@@ -108,20 +126,35 @@ export class AppState<T> implements IAppModel {
       errors.address = 'Необходимо указать адрес';
     }
 
+    this.formErrors = errors;
+    this.emitChanges('orderFormErrors:change', this.formErrors);
+    return Object.keys(errors).length === 0;
+  }
+
+  validateContacts(): boolean {
+    const errors: ValidationErrors = {};
     if (!this.order.email) {
       errors.email = 'Необходимо указать email';
     } else if (!this.order.email.includes('@')) {
       errors.email = 'Некорректный email';
     }
 
+    const phone = this.order.phone;
+
+
     if (!this.order.phone) {
       errors.phone = 'Необходимо указать телефон';
-    } else if (!/^\+?[\d\s\-()]{10,15}$/.test(this.order.phone)) {
-      errors.phone = 'Некорректный формат телефона';
+    } else {
+      const normalizedPhone = phone.trim().replace(/\s+/g, ' ').replace(/[\u00A0]/g, ' ');
+      const phoneRegex = /^(\+7|8)[\d\s\-\(\)]{9,15}$/;
+
+      if (!phoneRegex.test(normalizedPhone)) {
+        errors.phone = 'Некорректный формат телефона';
+      }
     }
 
     this.formErrors = errors;
-    this.events.emit('formErrors:changed', this.formErrors);
+    this.emitChanges('contactsFormErrors:change', this.formErrors);
     return Object.keys(errors).length === 0;
   }
 
@@ -142,6 +175,6 @@ export class AppState<T> implements IAppModel {
       email: '',
       phone: ''
     };
-    this.events.emit('order:changed');
+    this.emitChanges('order:changed');
   }
 }

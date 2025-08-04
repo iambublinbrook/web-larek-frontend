@@ -55,8 +55,8 @@ export class Modal extends Component<IModal> {
   /**открываем модальное окно */
   open(): void {
     this.container.classList.add('modal_active');
-    document.body.style.overflow = 'hidden';
-    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';//скрываем скролл
+    document.body.style.width = '100%';//фиксируем ширину
     this.events.emit('modal:open');
   }
 

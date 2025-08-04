@@ -61,13 +61,13 @@ export interface IForm {
 export type ICatalogItem = Omit<IProductItem, 'description'>;
 
 
-
 // Тип категорий товаров
 export type IProductCategory = { [key: string]: string };
 
 
 // Тип способа оплаты
 export type Payment = 'card' | 'cash' | '';
+
 
 // Тип данных для оплаты
 export type OrderPayment = Pick<IOrder, 'payment' | 'address'>;
@@ -80,6 +80,18 @@ export type ValidationErrors = Partial<Record<keyof IOrder, string>>;
 
 // Тип для состояния формы
 export type OrderFormState = Partial<OrderPayment> & IForm;
+
+// Тип события изменения оплаты
+export type PaymentChangeEvent = {
+  payment: Payment;
+  button: HTMLElement;
+};
+
+// Тип события изменения полей
+export type OrderInputChangeEvent = {
+  field: keyof OrderPayment | keyof Contacts;
+  value: string;
+};
 
 // Интерфейс модели приложения
 export interface IAppModel {

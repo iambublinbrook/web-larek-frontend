@@ -3,7 +3,7 @@
 export abstract class Component<T> {
   protected constructor(protected readonly container: HTMLElement) { }
 
-  // Переключаем CSS-класс у элемента
+  // Переключаем класс у элемента
   toggleClass(element: HTMLElement, className: string, force?: boolean) {
     element.classList.toggle(className, force);
   }
@@ -41,7 +41,7 @@ export abstract class Component<T> {
     }
   }
 
-  // Принимаем данные, обновляет поля класса и возвращает корневой элемент
+  // Принимаем данные, обновляем поля класса и возвращаем корневой элемент
   render(data?: Partial<T>): HTMLElement {
     Object.assign(this as object, data ?? {});
     return this.container;

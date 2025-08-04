@@ -63,7 +63,7 @@ export abstract class Form<T> extends Component<IForm> {
    * @param value — новое значение
    */
   protected onInputChange(field: keyof T, value: string): void {
-    this.events.emit(`input:change`, {
+    this.events.emit(`orderInput:change`, {
       field,
       value,
     });
@@ -90,10 +90,8 @@ export abstract class Form<T> extends Component<IForm> {
    * @param state — сотстояние формы
    * @returns HTMLElement формы
    */
-  render(state: Partial<T> & IForm) {
-    const { valid, errors, ...inputs } = state;
-    super.render({ valid, errors });
-    Object.assign(this, inputs);
+  render(state: Partial<T> & IForm): HTMLFormElement {
+    super.render(state);
     return this.container;
   }
 }

@@ -25,7 +25,7 @@ import {
 } from './components/ProductCard';
 
 // Типы
-import { IProductItem, IOrder } from './types';
+import { IProductItem, IOrder, PaymentChangeEvent, ValidationErrors } from './types';
 
 // Создаем экземпляры
 const events = new EventEmitter();
@@ -59,16 +59,7 @@ const components = {
 // Модели
 const appState = new AppState({}, events);
 
-// Загружаем список товаров
-/*api
-  .getProductList()
-  .then((items) => {
-    appState.setCatalog(items);
-  })
-  .catch((error) => {
-    console.error('Ошибка загрузки товаров:', error);
-  });*/
-
+// Получаем список список товаров
 api.getProductList()
   .then((items) => {
     appState.setCatalog(items);
@@ -173,41 +164,36 @@ events.on('order:open', () => {
 });
 
 // Изменение полей формы
-events.on(
-  'input:change',
-  (data: {
-    field: keyof Pick<IOrder, 'address' | 'phone' | 'email'>;
-    value: string;
-  }) => {
-    appState.setOrderField(data.field, data.value);
-  }
-);
+events.on('orderInput:change', (data: { field: keyof Pick<IOrder, 'email' | 'phone' | 'address'>; value: string }) => {
+  appState.setOrderField(data.field, data.value);
 
-// Изменение способа оплаты
-events.on(
-  'payment:change',
-  (data: { payment: keyof Pick<IOrder, 'payment'>; button: HTMLElement }) => {
-    components.orderForm.togglePayment(data.button);
-    appState.setOrderPayment(data.payment);
+  if (data.field === 'email' || data.field === 'phone') {
+    appState.validateContacts();
+  } else {
     appState.validateOrder();
   }
-);
+});
+
+
+// Изменение способа оплаты
+events.on('payment:change', (data: PaymentChangeEvent) => {
+  components.orderForm.togglePayment(data.button);
+  appState.setOrderPayment(data.payment);
+});
 
 // Обновление ошибок валидации
-events.on('formErrors:changed', (errors: Partial<IOrder>) => {
-  const { payment, address, email, phone } = errors;
-  const createValidationError = (
-    errorsObject: Record<string, string>
-  ): string =>
-    Object.values(errorsObject)
-      .filter(Boolean)
-      .join(' и ');
-
+events.on('orderFormErrors:change', (errors: ValidationErrors) => {
+  const { payment, address } = errors;
   components.orderForm.valid = !payment && !address;
-  components.orderForm.errors = createValidationError({ payment, address });
-  components.orderContacts.valid = !email && !phone;
-  components.orderContacts.errors = createValidationError({ email, phone });
+  components.orderForm.errors = Object.values({ payment, address }).filter(Boolean).join('; ');
 });
+
+events.on('contactsFormErrors:change', (errors: ValidationErrors) => {
+  const { email, phone } = errors;
+  components.orderContacts.valid = !email && !phone;
+  components.orderContacts.errors = Object.values({ email, phone }).filter(Boolean).join('; ');
+});
+
 
 // Переход к форме контактов
 events.on('order:submit', () => {
@@ -215,7 +201,7 @@ events.on('order:submit', () => {
     content: components.orderContacts.render({
       email: appState.order.email,
       phone: appState.order.phone,
-      valid: appState.validateOrder(),
+      valid: appState.validateContacts(),
       errors: [],
     }),
   });
@@ -234,8 +220,8 @@ events.on('contacts:submit', () => {
       appState.clearBasket();
       appState.clearOrder();
     })
-    .catch(err => {
-      console.error('Ошибка заказа:', err);
+    .catch((err) => {
+      console.error(err);
     });
 });
 
@@ -249,6 +235,7 @@ events.on('modal:open', () => {
   components.page.locked = true;
 });
 
+// Разлокировка страницы при закрытом модальном окне
 events.on('modal:close', () => {
   components.page.locked = false;
 });

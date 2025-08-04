@@ -126,7 +126,7 @@ export class ProductCard<T> extends Component<IProductItem> {
    * @param value Текст
    */
   set title(value: string) {
-    this.setText(this._title, value);
+    this._title.textContent = value;
   }
 
   /**
@@ -151,6 +151,9 @@ export class ProductCard<T> extends Component<IProductItem> {
     return this._description?.textContent || '';
   }
 
+  /**
+   * Устанавливает текст и добавляет CSS-класс
+   */
   set category(value: string) {
     if (!this._category) return;
 
@@ -163,10 +166,16 @@ export class ProductCard<T> extends Component<IProductItem> {
     if (categoryClass) this._category.classList.add(categoryClass);
   }
 
+  /** 
+   * Возвращает категорию
+  */
   get category() {
     return this._category?.textContent || '';
   }
 
+  /**
+   * Устанавливает цену
+   */
   set price(value: number | string | null) {
     const priceText = value === null ? 'Бесценно' : `${value} синапсов`;
     this.setText(this._price, priceText);
@@ -180,6 +189,9 @@ export class ProductCard<T> extends Component<IProductItem> {
     return this._price.textContent || '';
   }
 
+  /**
+   * Устанавливает текст на кнопке
+   */
   set button(value: string) {
     if (this._button) this.setText(this._button, value);
   }
@@ -206,6 +218,9 @@ export class ProductCardCatalog extends ProductCard<ICatalogItem> {
   }
 }
 
+/**
+ * Превью карточки
+ */
 export class ProductCardPreview extends ProductCard<IProductItem> {
   constructor(container: HTMLElement, events: EventEmitter) {
     super(container, events);
@@ -218,6 +233,9 @@ export class ProductCardPreview extends ProductCard<IProductItem> {
   }
 }
 
+/**
+ * Товар в корзине
+ */
 export class ProductCardBasket extends ProductCard<IBasket> {
   protected _index: HTMLElement;
   protected _deleteButton: HTMLButtonElement;
