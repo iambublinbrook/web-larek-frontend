@@ -7,6 +7,12 @@ export interface IProductItem {
   category: string;
   price: number | null;
   button: string;
+  alt?: string;
+}
+
+export interface IProductShort {
+  title: string;
+  alt?: string;
 }
 
 // Интерфейс заказа товара
@@ -33,6 +39,7 @@ export interface IProductData {
 export interface IBasket {
   items: IProductItem[];
   total: number;
+  title: string;
   addItem(item: IProductItem): void;
   removeItem(id: string): void;
   clear(): void;

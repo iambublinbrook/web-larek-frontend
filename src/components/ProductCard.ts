@@ -1,7 +1,7 @@
 import { productCategory } from '../utils/constants';
 import { ensureElement } from '../utils/utils';
 import { Component } from './base/Component';
-import { IProductItem, ICatalogItem, IBasket } from '../types';
+import { IProductItem, ICatalogItem, IBasket, IProductShort } from '../types';
 import { EventEmitter } from './base/events';
 
 interface BasketCardEvents {
@@ -11,7 +11,7 @@ interface BasketCardEvents {
 /**
  * Базовый класс карточки товара
  */
-export class ProductCard<T> extends Component<IProductItem> {
+export class ProductCard<T extends IProductShort> extends Component<IProductItem> {
   /**
    * Заголовок товара
    * @protected
@@ -111,14 +111,16 @@ export class ProductCard<T> extends Component<IProductItem> {
   set image(value: string) {
     if (!this._image) return;
     this._image.src = value;
-    this._image.alt = this.title;
   }
 
-  /**
-   * Возвращает изображение продукта
-   */
-  get image() {
-    return this._image?.src || '';
+  render(data: Partial<T> & { alt?: string }): HTMLElement {
+    super.render(data);
+
+    if (this._image) {
+      this._image.alt = data.alt || data.title || 'Изображение товара';
+    }
+
+    return this.container;
   }
 
   /**
@@ -129,26 +131,12 @@ export class ProductCard<T> extends Component<IProductItem> {
     this._title.textContent = value;
   }
 
-  /**
-   * Возвращает текущий заголовок
-   */
-  get title() {
-    return this._title.textContent || '';
-  }
-
   /*
   *Устанавливает описание товара
   *@param value Текст описания
   */
   set description(value: string) {
     this.setText(this._description, value);
-  }
-
-  /**
-   * Возвращает текущее описание товара
-   */
-  get description() {
-    return this._description?.textContent || '';
   }
 
   /**
@@ -166,13 +154,6 @@ export class ProductCard<T> extends Component<IProductItem> {
     if (categoryClass) this._category.classList.add(categoryClass);
   }
 
-  /** 
-   * Возвращает категорию
-  */
-  get category() {
-    return this._category?.textContent || '';
-  }
-
   /**
    * Устанавливает цену
    */
@@ -183,10 +164,6 @@ export class ProductCard<T> extends Component<IProductItem> {
     if (this._button) {
       this.setDisabled(this._button, value === null);
     }
-  }
-
-  get price() {
-    return this._price.textContent || '';
   }
 
   /**
